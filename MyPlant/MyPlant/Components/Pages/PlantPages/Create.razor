@@ -1,0 +1,115 @@
+﻿@page "/plants/create"
+@using Microsoft.EntityFrameworkCore
+@using MyPlant.Models
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Plant</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Plant" OnValidSubmit="AddPlant" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="creationdate" class="form-label">CreationDate:</label>
+                <InputDate id="creationdate" @bind-Value="Plant.CreationDate" class="form-control" />
+                <ValidationMessage For="() => Plant.CreationDate" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="wateringdate" class="form-label">WateringDate:</label>
+                <InputDate TValue="DateTime?" id="wateringdate" @bind-Value="Plant.WateringDate" class="form-control" />
+                <ValidationMessage For="() => Plant.WateringDate" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="imagebase64" class="form-label">ImageBase64:</label>
+                <InputText id="imagebase64" @bind-Value="Plant.ImageBase64" class="form-control" />
+                <ValidationMessage For="() => Plant.ImageBase64" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="plantType" class="form-label">Plant Type:</label>
+                <select id="plantType" class="form-control" @bind="SelectedPlantTypeId">
+                    <option value="0">-- Select Plant Type --</option>
+                    @foreach (var type in PlantTypes)
+                    {
+                        <option value="@type.Id">@type.CommonName</option> <!-- o ScientificName -->
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="plantLocation" class="form-label">Plant Location:</label>
+                <select id="plantLocation" class="form-control" @bind="SelectedPlantLocationId">
+                    <option value="0">-- Select Plant Location --</option>
+                    @foreach (var location in Locations)
+                    {
+                        <option value="@location.Id">@location.Name</option> <!-- o ScientificName -->
+                    }
+                </select>
+            </div>
+            @if (!string.IsNullOrEmpty(validationError))
+            {
+                <div class="alert alert-danger">@validationError</div>
+            }
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/plants">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Plant Plant { get; set; } = new()
+        {
+            WateringDate = DateTime.Now,
+            ImageBase64 = string.Empty
+        };
+
+    private List<PlantType> PlantTypes { get; set; } = new();
+    private List<PlantLocation> Locations { get; set; } = new();
+    private int? SelectedPlantTypeId { get; set; }
+    private int? SelectedPlantLocationId { get; set; }
+    private string? validationError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        PlantTypes = await context.PlantType.ToListAsync();
+        Locations = await context.PlantLocation.ToListAsync();
+    }
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddPlant()
+    {
+        if (SelectedPlantTypeId == 0 || SelectedPlantLocationId == 0)
+        {
+            // Mostrar mensaje de error, por ejemplo:
+            validationError = "Please select both a Plant Type and Location.";
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        var selectedPlantType = await context.PlantType.FindAsync(SelectedPlantTypeId);
+        var selectedLocation = await context.PlantLocation.FindAsync(SelectedPlantLocationId);
+        if (selectedPlantType != null)
+        {
+            Plant.PlantType = selectedPlantType;
+        }
+
+        if (selectedLocation != null)
+        {
+            Plant.PlantLocation = selectedLocation;
+        }
+
+        context.Plant.Add(Plant);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/plants");
+    }
+}

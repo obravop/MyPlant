@@ -1,0 +1,99 @@
+﻿@page "/plants/edit"
+@using Microsoft.EntityFrameworkCore
+@using MyPlant.Models
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Plant</h2>
+<hr />
+@if (Plant is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Plant" OnValidSubmit="UpdatePlant" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Plant.Id" value="@Plant.Id" />
+                <div class="mb-3">
+                    <label for="creationdate" class="form-label">CreationDate:</label>
+                    <InputDate id="creationdate" @bind-Value="Plant.CreationDate" class="form-control" />
+                    <ValidationMessage For="() => Plant.CreationDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="wateringdate" class="form-label">WateringDate:</label>
+                    <InputDate id="wateringdate" @bind-Value="Plant.WateringDate" class="form-control" />
+                    <ValidationMessage For="() => Plant.WateringDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="imagebase64" class="form-label">ImageBase64:</label>
+                    <InputText id="imagebase64" @bind-Value="Plant.ImageBase64" class="form-control" />
+                    <ValidationMessage For="() => Plant.ImageBase64" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/plants">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Plant? Plant { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Plant ??= await context.Plant.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Plant is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdatePlant()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Plant!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PlantExists(Plant!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/plants");
+    }
+
+    private bool PlantExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Plant.Any(e => e.Id == id);
+    }
+}

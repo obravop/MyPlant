@@ -1,0 +1,38 @@
+﻿@page "/plants"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MyPlant.Models
+@using MyPlant.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="plants/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Plant">
+    <PropertyColumn Property="plant => plant.CreationDate" />
+    <PropertyColumn Property="plant => plant.WateringDate" />
+    <PropertyColumn Property="plant => plant.ImageBase64" />
+
+    <TemplateColumn Context="plant">
+        <a href="@($"plants/edit?id={plant.Id}")">Edit</a> |
+        <a href="@($"plants/details?id={plant.Id}")">Details</a> |
+        <a href="@($"plants/delete?id={plant.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private MyPlantContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

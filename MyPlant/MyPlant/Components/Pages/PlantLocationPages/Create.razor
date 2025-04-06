@@ -1,0 +1,44 @@
+﻿@page "/plantlocations/create"
+@using Microsoft.EntityFrameworkCore
+@using MyPlant.Models
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>PlantLocation</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="PlantLocation" OnValidSubmit="AddPlantLocation" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label> 
+                <InputText id="name" @bind-Value="PlantLocation.Name" class="form-control" /> 
+                <ValidationMessage For="() => PlantLocation.Name" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/plantlocations">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private PlantLocation PlantLocation { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddPlantLocation()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.PlantLocation.Add(PlantLocation);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/plantlocations");
+    }
+}

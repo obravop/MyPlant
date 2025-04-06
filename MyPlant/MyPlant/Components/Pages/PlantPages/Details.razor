@@ -1,0 +1,50 @@
+﻿@page "/plants/details"
+@using Microsoft.EntityFrameworkCore
+@using MyPlant.Models
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Plant</h2>
+    <hr />
+    @if (plant is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">CreationDate</dt>
+            <dd class="col-sm-10">@plant.CreationDate</dd>
+            <dt class="col-sm-2">WateringDate</dt>
+            <dd class="col-sm-10">@plant.WateringDate</dd>
+            <dt class="col-sm-2">ImageBase64</dt>
+            <dd class="col-sm-10">@plant.ImageBase64</dd>
+        </dl>
+        <div>
+            <a href="@($"/plants/edit?id={plant.Id}")">Edit</a> |
+            <a href="@($"/plants")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Plant? plant;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        plant = await context.Plant.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (plant is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

@@ -1,0 +1,89 @@
+﻿@page "/plantlocations/edit"
+@using Microsoft.EntityFrameworkCore
+@using MyPlant.Models
+@inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>PlantLocation</h2>
+<hr />
+@if (PlantLocation is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="PlantLocation" OnValidSubmit="UpdatePlantLocation" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="PlantLocation.Id" value="@PlantLocation.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="PlantLocation.Name" class="form-control" />
+                    <ValidationMessage For="() => PlantLocation.Name" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/plantlocations">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private PlantLocation? PlantLocation { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        PlantLocation ??= await context.PlantLocation.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (PlantLocation is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdatePlantLocation()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(PlantLocation!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PlantLocationExists(PlantLocation!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/plantlocations");
+    }
+
+    private bool PlantLocationExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.PlantLocation.Any(e => e.Id == id);
+    }
+}
