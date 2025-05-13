@@ -16,6 +16,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Register the service
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
+builder.Services.AddScoped<ILogService, LogFileService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

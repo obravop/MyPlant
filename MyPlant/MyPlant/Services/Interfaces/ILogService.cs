@@ -2,5 +2,6 @@
 {
     public interface ILogService
     {
+        Task Log(string logText);
     }
 }
