@@ -1,8 +1,10 @@
 ﻿@page "/plants/create"
 @using Microsoft.EntityFrameworkCore
 @using MyPlant.Models
+@using MyPlant.Services.Interfaces
 @inject IDbContextFactory<MyPlant.Data.MyPlantContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject INotificationService NotificationService
 
 <PageTitle>Create</PageTitle>
 
@@ -76,7 +78,8 @@
     private int? SelectedPlantTypeId { get; set; }
     private int? SelectedPlantLocationId { get; set; }
     private string? validationError;
-
+    
+    
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -86,7 +89,7 @@
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddPlant()
-    {
+    {        
         if (SelectedPlantTypeId == 0 || SelectedPlantLocationId == 0)
         {
             // Mostrar mensaje de error, por ejemplo:
@@ -96,8 +99,10 @@
 
         using var context = DbFactory.CreateDbContext();
 
-        var selectedPlantType = await context.PlantType.FindAsync(SelectedPlantTypeId);
-        var selectedLocation = await context.PlantLocation.FindAsync(SelectedPlantLocationId);
+        var selectedPlantType = context.PlantType.First();
+        // var selectedPlantType = await context.PlantType.FindAsync(SelectedPlantTypeId);
+        var selectedLocation = context.PlantLocation.First();
+        // var selectedLocation = await context.PlantLocation.FindAsync(SelectedPlantLocationId);
         if (selectedPlantType != null)
         {
             Plant.PlantType = selectedPlantType;
@@ -110,6 +115,10 @@
 
         context.Plant.Add(Plant);
         await context.SaveChangesAsync();
+
+        //TODO: agregar a creación usuario
+        await NotificationService.NotifyNewUser("oscar.bravo.p@gmail.com");
+
         NavigationManager.NavigateTo("/plants");
     }
 }

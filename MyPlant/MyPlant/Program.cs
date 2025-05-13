@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyPlant.Data;
+using MyPlant.Services;
+using MyPlant.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<MyPlantContext>(options =>
@@ -10,6 +12,10 @@ builder.Services.AddDbContextFactory<MyPlantContext>(options =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+// Register the service
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
